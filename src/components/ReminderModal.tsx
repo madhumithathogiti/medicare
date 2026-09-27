@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Pill, Clock, CheckCircle, X, AlertCircle } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Pill, Clock, CheckCircle, X, AlertCircle, Volume2, VolumeX } from 'lucide-react';
 import { markLogTaken, markLogSkipped } from '@/lib/db';
 import { formatTime12 } from '@/lib/time';
 import type { ActiveReminder } from '@/hooks/useReminderEngine';
@@ -12,10 +12,55 @@ type Props = {
   onSkip: () => void;
 };
 
+function useAlarm(active: boolean) {
+  const ctxRef = useRef<AudioContext | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [muted, setMuted] = useState(false);
+
+  useEffect(() => {
+    if (!active) {
+      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
+      if (ctxRef.current) { ctxRef.current.close(); ctxRef.current = null; }
+      return;
+    }
+
+    try {
+      ctxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    } catch { return; }
+
+    const playBeep = () => {
+      const ctx = ctxRef.current;
+      if (!ctx || muted) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.setValueAtTime(660, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.4);
+    };
+
+    playBeep();
+    intervalRef.current = setInterval(playBeep, 2000);
+
+    return () => {
+      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
+      if (ctxRef.current) { ctxRef.current.close(); ctxRef.current = null; }
+    };
+  }, [active, muted]);
+
+  return { muted, setMuted };
+}
+
 export function ReminderModal({ reminder, onClose, onTaken, onSkip }: Props) {
   const { t } = useI18n();
   const [alreadyTaken, setAlreadyTaken] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const { muted, setMuted } = useAlarm(!!reminder);
 
   useEffect(() => {
     setAlreadyTaken(false);
@@ -69,9 +114,14 @@ export function ReminderModal({ reminder, onClose, onTaken, onSkip }: Props) {
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="text-white/80 hover:text-white transition-colors p-1">
-            <X className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setMuted((m) => !m)} className="text-white/80 hover:text-white transition-colors p-1" title={muted ? 'Unmute' : 'Mute'}>
+              {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+            </button>
+            <button onClick={onClose} className="text-white/80 hover:text-white transition-colors p-1">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
         <div className="p-6">

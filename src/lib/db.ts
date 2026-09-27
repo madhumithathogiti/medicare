@@ -155,9 +155,27 @@ export async function getNotifications(): Promise<NotificationItem[]> {
   return data ?? [];
 }
 
-export async function addNotification(n: Omit<NotificationItem, 'id' | 'created_at'>): Promise<void> {
-  const { error } = await supabase.from('notifications').insert(n);
+export async function addNotification(n: Omit<NotificationItem, 'id' | 'created_at'>): Promise<NotificationItem | null> {
+  const { data, error } = await supabase.from('notifications').insert(n).select('*').maybeSingle();
   if (error) throw error;
+  return data;
+}
+
+export async function sendGuardianEmail(notificationId?: string): Promise<void> {
+  try {
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-guardian-email`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ notificationId }),
+    });
+    if (!res.ok) console.error('Guardian email edge function returned non-OK:', res.status);
+  } catch (e) {
+    console.error('Failed to send guardian email:', e);
+  }
 }
 
 export async function markNotificationRead(id: string): Promise<void> {

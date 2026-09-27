@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { LogWithMedicine, Medicine } from '@/lib/supabase';
-import { getMedicines, getProfile, getLogsForDate, ensureLogsForDate, markLogMissed, incrementReminder, addNotification } from '@/lib/db';
+import { getMedicines, getProfile, getLogsForDate, ensureLogsForDate, markLogMissed, incrementReminder, addNotification, sendGuardianEmail } from '@/lib/db';
 import { istTodayStr, istNowMinutes, timeToMinutes } from '@/lib/time';
 import type { Lang, TFunc } from '@/lib/i18n';
 import { makeT } from '@/lib/i18n';
@@ -76,14 +76,15 @@ export function useReminderEngine(onReminder: (r: ActiveReminder) => void, lang:
 
       // Missed after 30 minutes
       if (elapsed >= MISS_AFTER) {
-        // Mark as missed in DB
         await markLogMissed(log.id);
-        // Create guardian notification (only once per log)
         if (!notifiedRef.current.has(`${logKey}-missed`)) {
           notifiedRef.current.add(`${logKey}-missed`);
           const profileName = (await getProfile())?.name ?? 'Patient';
           const msg = buildMessage(3, t, profileName, log.medicines?.name ?? 'medicine', log.scheduled_time);
-          await addNotification({ medicine_id: log.medicine_id, message: msg.message, level: msg.level, status: 'SENT' });
+          const notif = await addNotification({ medicine_id: log.medicine_id, message: msg.message, level: msg.level, status: 'SENT' });
+          if (notif?.id) {
+            sendGuardianEmail(notif.id).catch(console.error);
+          }
         }
         continue;
       }
@@ -95,7 +96,10 @@ export function useReminderEngine(onReminder: (r: ActiveReminder) => void, lang:
         if (reminderStage >= 1) {
           const profileName = (await getProfile())?.name ?? 'Patient';
           const msg = buildMessage(reminderStage, t, profileName, log.medicines?.name ?? 'medicine', log.scheduled_time);
-          await addNotification({ medicine_id: log.medicine_id, message: msg.message, level: msg.level, status: 'SENT' });
+          const notif = await addNotification({ medicine_id: log.medicine_id, message: msg.message, level: msg.level, status: 'SENT' });
+          if (notif?.id) {
+            sendGuardianEmail(notif.id).catch(console.error);
+          }
         }
       }
 
