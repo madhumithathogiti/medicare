@@ -55,30 +55,40 @@ Deno.serve(async (req: Request) => {
       body = `This is a reminder that ${profile.name} may have missed a scheduled medication dose. Please follow up with them.\n\nPhone: ${profile.phone}`;
     }
 
-    const emailRes = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}` },
-      body: JSON.stringify({ to: guardianEmail, subject, body }),
-    }).catch(() => null);
+    const resendKey = Deno.env.get("RESEND_API_KEY");
 
-    if (!emailRes || !emailRes.ok) {
-      // Fallback: use Resend if available, otherwise just log
-      const resendKey = Deno.env.get("RESEND_API_KEY");
-      if (resendKey) {
-        await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${resendKey}` },
-          body: JSON.stringify({
-            from: "Medication Guardian <alerts@medication-guardian.app>",
-            to: [guardianEmail],
-            subject,
-            text: body,
-          }),
+    if (resendKey) {
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${resendKey}` },
+        body: JSON.stringify({
+          from: "Medication Guardian <alerts@medication-guardian.app>",
+          to: [guardianEmail],
+          subject,
+          text: body,
+        }),
+      });
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "unknown");
+        return new Response(JSON.stringify({ error: `Resend failed: ${res.status} ${errText}` }), {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      return new Response(JSON.stringify({ sent: true, via: "resend", to: guardianEmail }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    return new Response(JSON.stringify({ sent: true, to: guardianEmail }), {
+    // No email provider configured — store the alert in notifications so the guardian
+    // sees it in the Alerts tab, and return a clear message so the frontend can inform.
+    return new Response(JSON.stringify({
+      sent: false,
+      reason: "no_email_provider",
+      message: "No RESEND_API_KEY configured. Email was not sent. Alert is visible in the Alerts tab.",
+      to: guardianEmail,
+    }), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {

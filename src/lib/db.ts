@@ -173,7 +173,14 @@ export async function sendGuardianEmail(notificationId?: string): Promise<void> 
       },
       body: JSON.stringify({ notificationId }),
     });
-    if (!res.ok) console.error('Guardian email edge function returned non-OK:', res.status);
+    if (!res.ok) {
+      console.error('Guardian email edge function returned non-OK:', res.status);
+      return;
+    }
+    const data = await res.json();
+    if (data.sent === false && data.reason === 'no_email_provider') {
+      console.warn('Guardian email not sent:', data.message);
+    }
   } catch (e) {
     console.error('Failed to send guardian email:', e);
   }
