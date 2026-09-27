@@ -88,6 +88,20 @@ const en: Dict = {
   pleaseFollowUp: 'Please follow up with them.',
   secondReminder: 'still has not taken',
   firstReminder: 'has not confirmed',
+  welcomeTitle: 'Medication Guardian',
+  welcomeSubtitle: 'Sign in to manage medication reminders',
+  signIn: 'Sign In',
+  signUp: 'Sign Up',
+  logout: 'Log Out',
+  loginEmail: 'Email',
+  loginPassword: 'Password',
+  signInBtn: 'Sign In',
+  createAccountBtn: 'Create Account',
+  noAccount: "Don't have an account?",
+  haveAccount: 'Already have an account?',
+  invalidCredentials: 'Invalid email or password',
+  signupError: 'Could not create account',
+  authLoading: 'Please wait...',
 };
 
 const hi: Dict = {
@@ -169,6 +183,20 @@ const hi: Dict = {
   pleaseFollowUp: 'कृपया उनसे संपर्क करें।',
   secondReminder: 'अभी तक दवा नहीं ली',
   firstReminder: 'ने पुष्टि नहीं की',
+  welcomeTitle: 'मेडिकेशन गार्जियन',
+  welcomeSubtitle: 'दवा अनुस्मारक प्रबंधित करने के लिए साइन इन करें',
+  signIn: 'साइन इन',
+  signUp: 'साइन अप',
+  logout: 'लॉग आउट',
+  loginEmail: 'ईमेल',
+  loginPassword: 'पासवर्ड',
+  signInBtn: 'साइन इन करें',
+  createAccountBtn: 'खाता बनाएं',
+  noAccount: 'खाता नहीं है?',
+  haveAccount: 'पहले से खाता है?',
+  invalidCredentials: 'गलत ईमेल या पासवर्ड',
+  signupError: 'खाता नहीं बनाया जा सका',
+  authLoading: 'कृपया प्रतीक्षा करें...',
 };
 
 const te: Dict = {
@@ -250,6 +278,20 @@ const te: Dict = {
   pleaseFollowUp: 'దయచేసి వారిని సంప్రదించండి.',
   secondReminder: 'ఇంకా మందు తీసుకోలేదు',
   firstReminder: 'నిర్ధారించలేదు',
+  welcomeTitle: 'మెడికేషన్ గార్డియన్',
+  welcomeSubtitle: 'మందు రిమైండర్‌లను నిర్వహించడానికి సైన్ ఇన్ చేయండి',
+  signIn: 'సైన్ ఇన్',
+  signUp: 'సైన్ అప్',
+  logout: 'లాగ్ అవుట్',
+  loginEmail: 'ఇమెయిల్',
+  loginPassword: 'పాస్‌వర్డ్',
+  signInBtn: 'సైన్ ఇన్ చేయండి',
+  createAccountBtn: 'ఖాతా సృష్టించండి',
+  noAccount: 'ఖాతా లేదా?',
+  haveAccount: 'ఇప్పటికే ఖాతా ఉందా?',
+  invalidCredentials: 'తప్పు ఇమెయిల్ లేదా పాస్‌వర్డ్',
+  signupError: 'ఖాతా సృష్టించలేకపోయింది',
+  authLoading: 'దయచేసి వేచి ఉండండి...',
 };
 
 const ta: Dict = {
@@ -331,6 +373,20 @@ const ta: Dict = {
   pleaseFollowUp: 'தயவுசெய்து அவர்களை தொடர்பு கொள்ளவும்.',
   secondReminder: 'இன்னும் மருந்து எடுக்கவில்லை',
   firstReminder: 'உறுதிசெய்யவில்லை',
+  welcomeTitle: 'மெடிகேஷன் கார்டியன்',
+  welcomeSubtitle: 'மருந்து நினைவூட்டல்களை நிர்வகிக்க உள்நுழையவும்',
+  signIn: 'உள்நுழை',
+  signUp: 'பதிவு செய்',
+  logout: 'வெளியேறு',
+  loginEmail: 'மின்னஞ்சல்',
+  loginPassword: 'கடவுச்சொல்',
+  signInBtn: 'உள்நுழையவும்',
+  createAccountBtn: 'கணக்கை உருவாக்கு',
+  noAccount: 'கணக்கு இல்லையா?',
+  haveAccount: 'ஏற்கனவே கணக்கு உள்ளதா?',
+  invalidCredentials: 'தவறான மின்னஞ்சல் அல்லது கடவுச்சொல்',
+  signupError: 'கணக்கை உருவாக்க முடியவில்லை',
+  authLoading: 'காத்திருக்கவும்...',
 };
 
 const dicts: Record<Lang, Dict> = { en, hi, te, ta };

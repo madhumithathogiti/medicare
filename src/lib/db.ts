@@ -1,4 +1,5 @@
 import { supabase, type Profile, type Medicine, type MedLog, type LogWithMedicine, type NotificationItem, type LogStatus } from './supabase';
+export { supabase };
 import { istTodayStr } from './time';
 
 export async function getProfile(): Promise<Profile | null> {

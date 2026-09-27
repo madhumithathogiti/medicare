@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Pill, Shield, Heart, Globe, Clock } from 'lucide-react';
-import { getProfile, getLogsForDate, markLogTaken } from '@/lib/db';
+import { Pill, Shield, Heart, Globe, Clock, LogOut } from 'lucide-react';
+import { supabase, getProfile, getLogsForDate, markLogTaken } from '@/lib/db';
 import type { Profile, LogWithMedicine } from '@/lib/supabase';
 import { istTodayStr, istTimeStr, istFullDate } from '@/lib/time';
 import { ProfileSetup } from '@/components/ProfileSetup';
 import { ElderlyView } from '@/components/ElderlyView';
 import { GuardianView } from '@/components/GuardianView';
 import { ReminderModal } from '@/components/ReminderModal';
+import { AuthPage } from '@/components/AuthPage';
 import type { ActiveReminder } from '@/hooks/useReminderEngine';
 import { useReminderEngine } from '@/hooks/useReminderEngine';
 import { I18nProvider, useI18n, LANGS } from '@/lib/i18n-context';
@@ -16,6 +17,8 @@ type Role = 'elderly' | 'guardian';
 
 function AppInner() {
   const { lang, setLang, t } = useI18n();
+  const [session, setSession] = useState<import('@supabase/supabase-js').Session | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<Role>('elderly');
@@ -24,6 +27,17 @@ function AppInner() {
   const [refreshTick, setRefreshTick] = useState(0);
   const [langOpen, setLangOpen] = useState(false);
   const [clock, setClock] = useState({ time: istTimeStr(), date: istFullDate() });
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setAuthReady(true);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -105,7 +119,7 @@ function AppInner() {
   void refreshTick;
   void markLogTaken;
 
-  if (loading) {
+  if (!authReady || loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
@@ -116,6 +130,10 @@ function AppInner() {
         </div>
       </div>
     );
+  }
+
+  if (!session) {
+    return <AuthPage />;
   }
 
   if (!profile) {
@@ -157,7 +175,7 @@ function AppInner() {
           </div>
 
           {/* Row 3: Language selector */}
-          <div className="relative rounded-b-2xl">
+          <div className="relative border-b border-slate-100">
             <button
               onClick={() => setLangOpen((o) => !o)}
               className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors"
@@ -185,6 +203,15 @@ function AppInner() {
               </>
             )}
           </div>
+
+          {/* Row 4: Logout */}
+          <button
+            onClick={async () => { await supabase.auth.signOut(); }}
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors rounded-b-2xl"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            {t('logout')}
+          </button>
         </div>
       </div>
 
