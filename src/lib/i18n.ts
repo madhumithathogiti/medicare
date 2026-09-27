@@ -102,6 +102,14 @@ const en: Dict = {
   invalidCredentials: 'Invalid email or password',
   signupError: 'Could not create account',
   authLoading: 'Please wait...',
+  scanMedicine: 'Scan Medicine',
+  scanHint: 'Take a photo of the medicine label to auto-fill details',
+  scanning: 'Scanning...',
+  scanError: 'Could not read the label. Please enter details manually.',
+  retakePhoto: 'Retake',
+  usePhoto: 'Use Photo',
+  camera: 'Camera',
+  uploadPhoto: 'Upload',
 };
 
 const hi: Dict = {
@@ -197,6 +205,14 @@ const hi: Dict = {
   invalidCredentials: 'गलत ईमेल या पासवर्ड',
   signupError: 'खाता नहीं बनाया जा सका',
   authLoading: 'कृपया प्रतीक्षा करें...',
+  scanMedicine: 'दवा स्कैन करें',
+  scanHint: 'विवरण अपने आप भरने के लिए दवा के लेबल की फोटो लें',
+  scanning: 'स्कैन हो रहा है...',
+  scanError: 'लेबल पढ़ा नहीं जा सका। कृपया विवरण हाथ से दर्ज करें।',
+  retakePhoto: 'फिर से लें',
+  usePhoto: 'फोटो उपयोग करें',
+  camera: 'कैमरा',
+  uploadPhoto: 'अपलोड',
 };
 
 const te: Dict = {
@@ -292,6 +308,14 @@ const te: Dict = {
   invalidCredentials: 'తప్పు ఇమెయిల్ లేదా పాస్‌వర్డ్',
   signupError: 'ఖాతా సృష్టించలేకపోయింది',
   authLoading: 'దయచేసి వేచి ఉండండి...',
+  scanMedicine: 'మందు స్కాన్ చేయండి',
+  scanHint: 'వివరాలు అంతా నింపడానికి మందు లేబుల్ ఫోటో తీయండి',
+  scanning: 'స్కాన్ అవుతోంది...',
+  scanError: 'లేబుల్ చదవలేకపోయింది. దయచేసి వివరాలు మాన్యువల్‌గా నమోదు చేయండి.',
+  retakePhoto: 'మళ్లీ తీయండి',
+  usePhoto: 'ఫోటో వాడండి',
+  camera: 'కెమెరా',
+  uploadPhoto: 'అప్‌లోడ్',
 };
 
 const ta: Dict = {
@@ -387,6 +411,14 @@ const ta: Dict = {
   invalidCredentials: 'தவறான மின்னஞ்சல் அல்லது கடவுச்சொல்',
   signupError: 'கணக்கை உருவாக்க முடியவில்லை',
   authLoading: 'காத்திருக்கவும்...',
+  scanMedicine: 'மருந்தை ஸ்கேன் செய்',
+  scanHint: 'விவரங்களை தானாக நிரப்ப மருந்து லேபிளின் படத்தை எடுக்கவும்',
+  scanning: 'ஸ்கேன் செய்கிறது...',
+  scanError: 'லேபிளை படிக்க முடியவில்லை. விவரங்களை கைமுறையாக உள்ளிடவும்.',
+  retakePhoto: 'மீண்டும் எடு',
+  usePhoto: 'படத்தை பயன்படுத்து',
+  camera: 'கேமரா',
+  uploadPhoto: 'பதிவேற்று',
 };
 
 const dicts: Record<Lang, Dict> = { en, hi, te, ta };

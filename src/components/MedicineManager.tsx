@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from 'react';
-import { Pill, Clock, Calendar, Plus, X, Trash2, Edit2, Save, AlertCircle } from 'lucide-react';
+import { Pill, Clock, Calendar, Plus, X, Trash2, Edit2, Save, AlertCircle, ScanLine } from 'lucide-react';
 import { saveMedicine, deleteMedicine } from '@/lib/db';
 import type { Medicine } from '@/lib/supabase';
 import { formatTime12 } from '@/lib/time';
 import { useI18n } from '@/lib/i18n-context';
+import { MedicineScanner } from '@/components/MedicineScanner';
 
 type Props = {
   medicines: Medicine[];
@@ -14,6 +15,7 @@ type Props = {
 export function MedicineManager({ medicines, onSaved, onDeleted }: Props) {
   const { t } = useI18n();
   const [showForm, setShowForm] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const [editing, setEditing] = useState<Medicine | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -104,12 +106,20 @@ export function MedicineManager({ medicines, onSaved, onDeleted }: Props) {
           <h2 className="text-2xl font-bold text-slate-800">Medicines</h2>
           <p className="text-slate-500 text-sm mt-1">{medicines.length} {t('prescribed')}</p>
         </div>
-        <button
-          onClick={() => { resetForm(); setShowForm(true); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 transition-all hover:shadow-lg active:scale-95"
-        >
-          <Plus className="w-5 h-5" /> {t('addMedicine')}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowScanner(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border-2 border-teal-600 text-teal-700 font-semibold hover:bg-teal-50 transition-all active:scale-95"
+          >
+            <ScanLine className="w-5 h-5" /> {t('scanMedicine')}
+          </button>
+          <button
+            onClick={() => { resetForm(); setShowForm(true); }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 transition-all hover:shadow-lg active:scale-95"
+          >
+            <Plus className="w-5 h-5" /> {t('addMedicine')}
+          </button>
+        </div>
       </div>
 
       {error && <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-600 text-sm flex items-center gap-2"><AlertCircle className="w-4 h-4" />{error}</div>}
@@ -186,6 +196,18 @@ export function MedicineManager({ medicines, onSaved, onDeleted }: Props) {
             </form>
           </div>
         </div>
+      )}
+
+      {showScanner && (
+        <MedicineScanner
+          onScan={(data) => {
+            setShowScanner(false);
+            resetForm();
+            setForm((f) => ({ ...f, name: data.name, dosage: data.dosage }));
+            setShowForm(true);
+          }}
+          onClose={() => setShowScanner(false)}
+        />
       )}
 
       <div className="space-y-3">
