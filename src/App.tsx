@@ -92,6 +92,11 @@ function AppInner() {
     setRefreshTick((t) => t + 1);
   }, [closeReminder]);
 
+  const handleSnooze = useCallback(() => {
+    closeReminder();
+    setRefreshTick((t) => t + 1);
+  }, [closeReminder]);
+
   const handleOpenReminder = useCallback(async (logId: string) => {
     const logs = await getLogsForDate(istTodayStr());
     const log = logs.find((l) => l.id === logId);
@@ -234,6 +239,7 @@ function AppInner() {
         onClose={closeReminder}
         onTaken={handleTaken}
         onSkip={handleSkip}
+        onSnooze={handleSnooze}
       />
     </div>
   );

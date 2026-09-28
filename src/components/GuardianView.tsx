@@ -351,14 +351,55 @@ function GuardianCalendar({ medicines }: { medicines: Medicine[] }) {
 
 function AlertsTab({ notifications, onRead, onRefresh }: { notifications: NotificationItem[]; onRead: (id: string) => Promise<void>; onRefresh: () => void }) {
   const { t } = useI18n();
+  const [emailStatus, setEmailStatus] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+
   const handleRead = async (id: string) => {
     await onRead(id);
     onRefresh();
   };
 
+  const handleSendEmail = async (notifId: string) => {
+    setSending(true);
+    setEmailStatus(null);
+    try {
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-guardian-email`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ notificationId: notifId }),
+      });
+      const data = await res.json();
+      if (data.sent) {
+        setEmailStatus(t('emailSentOk'));
+      } else if (data.reason === 'no_email_provider') {
+        setEmailStatus(t('emailNotConfigured'));
+      } else {
+        setEmailStatus(data.error ?? t('emailFailed'));
+      }
+    } catch {
+      setEmailStatus(t('emailFailed'));
+    } finally {
+      setSending(false);
+      setTimeout(() => setEmailStatus(null), 5000);
+    }
+  };
+
   return (
     <div>
       <h2 className="text-lg font-bold text-slate-800 mb-3">{t('notifications')}</h2>
+
+      {emailStatus && (
+        <div className={`mb-4 p-3 rounded-xl text-sm flex items-center gap-2 ${
+          emailStatus === t('emailSentOk') ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
+        }`}>
+          <AlertCircle className="w-4 h-4" /> {emailStatus}
+        </div>
+      )}
+
       {notifications.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300">
           <Bell className="w-10 h-10 text-slate-300 mx-auto mb-2" />
@@ -393,12 +434,21 @@ function AlertsTab({ notifications, onRead, onRefresh }: { notifications: Notifi
                   </div>
                   <p className="text-sm text-slate-700">{n.message}</p>
                   <p className="text-xs text-slate-400 mt-1">{formatDateTimeIST(n.created_at)}</p>
+                  <div className="flex gap-2 mt-2">
+                    {n.status === 'SENT' && (
+                      <button onClick={() => handleRead(n.id)} className="text-xs font-medium text-indigo-600 hover:text-indigo-700 px-2 py-1 rounded-lg hover:bg-indigo-50 transition-colors">
+                        {t('markRead')}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleSendEmail(n.id)}
+                      disabled={sending}
+                      className="text-xs font-medium text-teal-600 hover:text-teal-700 px-2 py-1 rounded-lg hover:bg-teal-50 transition-colors flex items-center gap-1 disabled:opacity-50"
+                    >
+                      <Mail className="w-3.5 h-3.5" /> {t('sendEmail')}
+                    </button>
+                  </div>
                 </div>
-                {n.status === 'SENT' && (
-                  <button onClick={() => handleRead(n.id)} className="text-xs font-medium text-indigo-600 hover:text-indigo-700 px-2 py-1 rounded-lg hover:bg-indigo-50 transition-colors flex-shrink-0">
-                    {t('markRead')}
-                  </button>
-                )}
               </div>
             </div>
           ))}

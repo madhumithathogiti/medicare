@@ -71,6 +71,12 @@ export function useReminderEngine(onReminder: (r: ActiveReminder) => void, lang:
       const elapsed = now - scheduledMin;
       if (elapsed < 0) continue;
 
+      // Skip if snoozed (last_reminded_at is in the future)
+      if (log.last_reminded_at) {
+        const snoozeUntil = new Date(log.last_reminded_at).getTime();
+        if (Date.now() < snoozeUntil) continue;
+      }
+
       const reminderStage = Math.min(Math.floor(elapsed / 10), 3);
       const logKey = `${log.id}`;
 

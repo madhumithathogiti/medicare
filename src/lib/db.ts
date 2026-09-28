@@ -123,6 +123,24 @@ export async function markLogSkipped(logId: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function snoozeLog(logId: string, minutes: number): Promise<void> {
+  const { data, error: fetchErr } = await supabase
+    .from('logs')
+    .select('reminder_count, last_reminded_at')
+    .eq('id', logId)
+    .maybeSingle();
+  if (fetchErr) throw fetchErr;
+  const snoozedUntil = new Date(Date.now() + minutes * 60000).toISOString();
+  const { error } = await supabase
+    .from('logs')
+    .update({
+      last_reminded_at: snoozedUntil,
+      reminder_count: (data?.reminder_count ?? 0),
+    })
+    .eq('id', logId);
+  if (error) throw error;
+}
+
 export async function markLogMissed(logId: string): Promise<void> {
   const { error } = await supabase
     .from('logs')

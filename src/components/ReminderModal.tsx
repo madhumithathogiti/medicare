@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pill, Clock, CheckCircle, X, AlertCircle, Volume2, VolumeX } from 'lucide-react';
-import { markLogTaken, markLogSkipped } from '@/lib/db';
+import { Pill, Clock, CheckCircle, X, AlertCircle, Volume2, VolumeX, BellOff } from 'lucide-react';
+import { markLogTaken, markLogSkipped, snoozeLog } from '@/lib/db';
 import { formatTime12 } from '@/lib/time';
 import type { ActiveReminder } from '@/hooks/useReminderEngine';
 import { useI18n } from '@/lib/i18n-context';
@@ -10,6 +10,7 @@ type Props = {
   onClose: () => void;
   onTaken: (alreadyTaken: boolean) => void;
   onSkip: () => void;
+  onSnooze: () => void;
 };
 
 function useAlarm(active: boolean) {
@@ -56,7 +57,7 @@ function useAlarm(active: boolean) {
   return { muted, setMuted };
 }
 
-export function ReminderModal({ reminder, onClose, onTaken, onSkip }: Props) {
+export function ReminderModal({ reminder, onClose, onTaken, onSkip, onSnooze }: Props) {
   const { t } = useI18n();
   const [alreadyTaken, setAlreadyTaken] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -96,6 +97,20 @@ export function ReminderModal({ reminder, onClose, onTaken, onSkip }: Props) {
       console.error(e);
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const [snoozing, setSnoozing] = useState(false);
+  const handleSnooze = async () => {
+    if (!reminder) return;
+    setSnoozing(true);
+    try {
+      await snoozeLog(reminder.logId, 5);
+      onSnooze();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSnoozing(false);
     }
   };
 
@@ -167,13 +182,23 @@ export function ReminderModal({ reminder, onClose, onTaken, onSkip }: Props) {
                   <CheckCircle className="w-6 h-6" />
                   {t('yesTookIt')}
                 </button>
-                <button
-                  onClick={handleSkip}
-                  disabled={processing}
-                  className="w-full py-4 rounded-xl bg-slate-100 text-slate-700 font-semibold hover:bg-slate-200 transition-all active:scale-[0.98] disabled:opacity-50"
-                >
-                  {t('remindMeAgain')}
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleSkip}
+                    disabled={processing}
+                    className="flex-1 py-3.5 rounded-xl bg-slate-100 text-slate-700 font-semibold hover:bg-slate-200 transition-all active:scale-[0.98] disabled:opacity-50"
+                  >
+                    {t('remindMeAgain')}
+                  </button>
+                  <button
+                    onClick={handleSnooze}
+                    disabled={snoozing}
+                    className="flex-1 py-3.5 rounded-xl bg-amber-100 text-amber-700 font-semibold hover:bg-amber-200 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    <BellOff className="w-5 h-5" />
+                    {t('snooze')} 5m
+                  </button>
+                </div>
               </div>
             </>
           )}

@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Pill, Clock, CheckCircle, XCircle, AlertCircle, Bell, CalendarDays } from 'lucide-react';
+import { Pill, Clock, CheckCircle, XCircle, AlertCircle, Bell, CalendarDays, Check, X } from 'lucide-react';
 import type { LogWithMedicine, Profile, Medicine } from '@/lib/supabase';
 import { formatTime12, minutesAhead, formatDate, istTodayStr } from '@/lib/time';
 import { MedicineManager } from './MedicineManager';
-import { getLogsForDateRange } from '@/lib/db';
+import { HealthRecords } from './HealthRecords';
+import { getLogsForDateRange, markLogTaken, markLogSkipped } from '@/lib/db';
 import { useI18n } from '@/lib/i18n-context';
 
 type Props = {
@@ -15,7 +16,7 @@ type Props = {
   onRefresh: () => void;
 };
 
-type Tab = 'today' | 'medicines' | 'calendar';
+type Tab = 'today' | 'medicines' | 'calendar' | 'records';
 
 export function ElderlyView({ profile, medicines, todayLogs, onMedicinesChanged, onOpenReminder, onRefresh }: Props) {
   const { t } = useI18n();
@@ -25,6 +26,7 @@ export function ElderlyView({ profile, medicines, todayLogs, onMedicinesChanged,
     { id: 'today', label: t('today'), icon: Pill },
     { id: 'medicines', label: t('medicines'), icon: Pill },
     { id: 'calendar', label: t('calendar'), icon: CalendarDays },
+    { id: 'records', label: t('healthRecords'), icon: Pill },
   ];
 
   return (
@@ -62,7 +64,8 @@ export function ElderlyView({ profile, medicines, todayLogs, onMedicinesChanged,
       <main className="max-w-3xl mx-auto px-4 py-6 pb-24">
         {tab === 'today' && <TodayView logs={todayLogs} onOpenReminder={onOpenReminder} />}
         {tab === 'medicines' && <MedicineManager medicines={medicines} onSaved={onMedicinesChanged} onDeleted={onMedicinesChanged} />}
-        {tab === 'calendar' && <CalendarView medicines={medicines} />}
+        {tab === 'calendar' && <CalendarView medicines={medicines} onRefresh={onRefresh} />}
+        {tab === 'records' && <HealthRecords />}
       </main>
     </div>
   );
@@ -172,7 +175,7 @@ function StatCard({ label, value, color }: { label: string; value: number; color
   );
 }
 
-function CalendarView({ medicines }: { medicines: Medicine[] }) {
+function CalendarView({ medicines, onRefresh }: { medicines: Medicine[]; onRefresh: () => void }) {
   const { t } = useI18n();
   const [month, setMonth] = useState(new Date().getMonth());
   const [year, setYear] = useState(new Date().getFullYear());
@@ -292,13 +295,31 @@ function CalendarView({ medicines }: { medicines: Medicine[] }) {
           ) : (
             <div className="space-y-2">
               {selectedLogs.map((log) => (
-                <div key={log.id} className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
-                  <div className="flex items-center gap-2">
-                    <Pill className="w-4 h-4 text-slate-400" />
-                    <span className="font-medium text-slate-700">{log.medicines?.name}</span>
-                    <span className="text-sm text-slate-400">· {formatTime12(log.scheduled_time)}</span>
+                <div key={log.id} className="py-2 border-b border-slate-50 last:border-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Pill className="w-4 h-4 text-slate-400" />
+                      <span className="font-medium text-slate-700">{log.medicines?.name}</span>
+                      <span className="text-sm text-slate-400">· {formatTime12(log.scheduled_time)}</span>
+                    </div>
+                    <StatusBadge status={log.status} />
                   </div>
-                  <StatusBadge status={log.status} />
+                  {log.status === 'PENDING' && (
+                    <div className="flex gap-2 mt-2 ml-6">
+                      <button
+                        onClick={async () => { await markLogTaken(log.id); onRefresh(); loadMonth(year, month); }}
+                        className="flex items-center gap-1 text-xs font-semibold text-green-600 px-2.5 py-1.5 rounded-lg bg-green-50 hover:bg-green-100 transition-colors"
+                      >
+                        <Check className="w-3.5 h-3.5" /> {t('markTaken')}
+                      </button>
+                      <button
+                        onClick={async () => { await markLogSkipped(log.id); onRefresh(); loadMonth(year, month); }}
+                        className="flex items-center gap-1 text-xs font-semibold text-amber-600 px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" /> {t('markSkipped')}
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
